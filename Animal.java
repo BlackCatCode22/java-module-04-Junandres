@@ -1,116 +1,76 @@
 package dennis.zoo.com;
 
-import java.util.Date;
+import java.io.*;
+import java.util.*;
 
-public class Animal {
-    // Create a static int that keep track of the number of animals created.
-    static int numOfAnimals = 0;
+public class ZooManager {
+    private List<Animal> animals = new ArrayList<>();
+    private Map<String, Integer> speciesCount = new HashMap<>();
 
-    // Create a constructor for our new Animal objects
-    public Animal() {
-        numOfAnimals++;
+    public void loadAnimals(String animalsFile, String namesFile) {
+        try (BufferedReader brAnimals = new BufferedReader(new FileReader(animalsFile));
+             BufferedReader brNames = new BufferedReader(new FileReader(namesFile))) {
+
+            String line;
+            while ((line = brAnimals.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length < 3) continue;
+
+                String species = data[0].trim();
+                String sex = data[1].trim();
+                int age = Integer.parseInt(data[2].trim());
+                int weight = Integer.parseInt(data[3].trim());
+                String birthDate = data[4].trim();
+                String color = data[5].trim();
+                String origin = data[6].trim();
+
+                String name = brNames.readLine();
+                if (name == null) name = "Unknown";
+
+                Animal animal = createAnimal(species, sex, age, weight, name, birthDate, color, origin);
+                if (animal != null) {
+                    animals.add(animal);
+                    speciesCount.put(species, speciesCount.getOrDefault(species, 0) + 1);
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            System.out.println("Error reading files: " + e.getMessage());
+        }
     }
 
-    // Create a constructor that will accept all fields as arguments.
-    public Animal(String sex, int age, int weight, String animalName,
-                  String animalID, String animalBirthDate, String animalColor,
-                  String animalOrigin, String animalArrivalDate) {
-        // Add an animal to keep track of the number of animals in our zoo.
-        numOfAnimals++;
-        this.sex = sex;
-        this.age = age;
-        this.weight = weight;
-        this.animalName = animalName;
-        this.animalID = animalID;
-        this.animalBirthDate = animalBirthDate;
-        this.animalColor = animalColor;
-        this.animalOrigin = animalOrigin;
-        this.animalArrivalDate = animalArrivalDate;
+    private Animal createAnimal(String species, String sex, int age, int weight, String name, String birthDate, String color, String origin) {
+        return switch (species.toLowerCase()) {
+            case "hyena" -> new Hyena(sex, age, weight, name, birthDate, color, origin);
+            case "lion" -> new Lion(sex, age, weight, name, birthDate, color, origin);
+            case "tiger" -> new Tiger(sex, age, weight, name, birthDate, color, origin);
+            case "bear" -> new Bear(sex, age, weight, name, birthDate, color, origin);
+            default -> null;
+        };
     }
 
-    // Create all attributes (fields) needed for the ZooKeeperChallenge program.
+    public void generateReport(String outputFile) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+            writer.write("Zoo Animal Report\n");
+            writer.write("==================\n");
 
+            for (Animal animal : animals) {
+                writer.write(animal + "\n");
+            }
 
+            writer.write("\nSpecies Count:\n");
+            for (Map.Entry<String, Integer> entry : speciesCount.entrySet()) {
+                writer.write(entry.getKey() + ": " + entry.getValue() + "\n");
+            }
 
-
-    // sex will be 'male' or 'female'
-    private String sex;
-    // age will be in years
-    private int age;
-    // weight will be in pounds
-    private int weight;
-    // name will be a String;
-    private String animalName;
-    // animalID will be first two latin letters of the species name and an integer number. Number part of the ID must be
-    // at least two characters. For example: Hy01, Hy02, Be01, Be02, etc.
-    private String animalID;
-    // animalBirthDate is going to be a string here (in this class)
-    private String animalBirthDate;
-    // animalColor is a String
-    private String animalColor;
-    // origin will be a string like: "from Friguia Park, Tunisia"
-    private String animalOrigin;
-    // arrival date will be the system date when the animal object was created
-    private String animalArrivalDate;
-
-    // Create getters and setters
-
-    public String getAnimalOrigin() {
-        return animalOrigin;
-    }
-    public void setAnimalOrigin(String animalOrigin) {
-        this.animalOrigin = animalOrigin;
+            System.out.println("Report written to " + outputFile);
+        } catch (IOException e) {
+            System.out.println("Error writing file: " + e.getMessage());
+        }
     }
 
-    public String getAnimalColor() {
-        return animalColor;
+    public static void main(String[] args) {
+        ZooManager zoo = new ZooManager();
+        zoo.loadAnimals("arrivingAnimals.txt", "animalNames.txt");
+        zoo.generateReport("newAnimals.txt");
     }
-    public void setAnimalColor(String animalColor) {
-        this.animalColor = animalColor;
-    }
-
-    public String getAnimalBirthDate() {
-        return animalBirthDate;
-    }
-    public void setAnimalBirthDate(String animalBirthDate) {
-        this.animalBirthDate = animalBirthDate;
-    }
-
-    public String getAnimalID() {
-        return animalID;
-    }
-    public void setAnimalID(String animalID) {
-        this.animalID = animalID;
-    }
-
-    public String getAnimalName() {
-        return animalName;
-    }
-    public void setAnimalName(String animalName) {
-        this.animalName = animalName;
-    }
-
-    public int getAge() {
-        return age;
-    }
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public String getSex() {
-        return sex;
-    }
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public int getWeight() {
-        return weight;
-    }
-    public void setWeight(int weight) {
-        this.weight = weight;
-    }
-
-    public String getAnimalArrivalDate() { return animalArrivalDate; }
-    public void setAnimalArrivalDate(String animalArrivalDate) { this.animalArrivalDate = animalArrivalDate; }
 }
